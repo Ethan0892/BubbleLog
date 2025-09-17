@@ -1,0 +1,63 @@
+monitoring:
+  # How often to log system usage (in seconds)
+  interval: 30
+  cpu:
+    # Enable CPU usage monitoring
+    enabled: true
+  ram:
+    # Enable RAM usage monitoring
+    enabled: true
+  disk:
+    # Enable disk usage monitoring
+    enabled: true
+  network:
+    # Enable network and player monitoring
+    enabled: true
+  jvm:
+    # Enable JVM performance monitoring
+    enabled: true
+  connection-quality:
+    # Enable connection quality monitoring (ping, packet loss)
+    enabled: true
+
+logging:
+  # Name of the log file
+  filename: "system-usage.log"
+  # Also log to console/server log
+  console: false
+  # Date format for log entries
+  date-format: "yyyy-MM-dd HH:mm:ss"
+  # Maximum number of log files to keep (0 = unlimited)
+  max-files: 7
+
+alerts:
+  # Enable performance alerts
+  enabled: true
+  thresholds:
+    # CPU usage threshold for alerts (percentage)
+    cpu: 80.0
+    # RAM usage threshold for alerts (percentage)
+    ram: 85.0
+    # Disk usage threshold for alerts (percentage)
+    disk: 90.0
+  # Send alerts to server console
+  console: true
+  # Log alerts to file
+  log-to-file: true
+  # Cooldown between same alert types (seconds)
+  cooldown: 300
+  discord:
+    # Enable Discord webhook alerts
+    enabled: false
+    # Discord webhook URL for alerts
+    webhook-url: ""
+    status-reports:
+      # Enable periodic Discord status reports
+      enabled: false
+      # Discord status report interval in seconds (3600 = 1 hour)
+      interval: 3600
+  slack:
+    # Enable Slack webhook alerts
+    enabled: false
+    # Slack webhook URL for alerts
+    webhook-url: ""

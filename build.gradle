@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'net.bubblecraft'
+version = '1.0.0'
+description = 'BubbleLog - CPU/RAM monitoring plugin for Velocity'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    
+    // For system monitoring
+    implementation 'com.github.oshi:oshi-core:6.4.8'
+    
+    // For configuration
+    implementation 'org.spongepowered:configurate-yaml:4.1.2'
+    implementation 'org.spongepowered:configurate-extra-guice:4.1.2'
+}
+
+shadowJar {
+    archiveBaseName = 'BubbleLog'
+    archiveClassifier = ''
+    
+    relocate 'oshi', 'net.bubblecraft.bubblelog.libs.oshi'
+    relocate 'org.spongepowered.configurate', 'net.bubblecraft.bubblelog.libs.configurate'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+build.dependsOn shadowJar
