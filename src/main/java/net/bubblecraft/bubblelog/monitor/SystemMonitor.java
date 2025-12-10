@@ -94,7 +94,7 @@ public class SystemMonitor {
             if (config.isCpuMonitoringEnabled()) {
                 try {
                     cpuUsage = getCpuUsage();
-                    logBuilder.append("CPU: ").append(String.format("%.2f%%", cpuUsage * 100));
+                    logBuilder.append("CPU: ").append("%.2f%%".formatted(cpuUsage * 100));
                 } catch (Exception e) {
                     logger.debug("Failed to get CPU usage", e);
                     logBuilder.append("CPU: N/A");
@@ -114,7 +114,7 @@ public class SystemMonitor {
                         .append("/")
                         .append(formatBytes(memUsage.getTotal()))
                         .append(" (")
-                        .append(String.format("%.2f%%", memUsage.getUsagePercent()))
+                        .append("%.2f%%".formatted(memUsage.getUsagePercent()))
                         .append(")");
                 } catch (Exception e) {
                     logger.debug("Failed to get RAM usage", e);
@@ -144,7 +144,7 @@ public class SystemMonitor {
                             .append("/")
                             .append(formatBytes(disk.getTotal()))
                             .append(" (")
-                            .append(String.format("%.2f%%", disk.getUsagePercent()))
+                            .append("%.2f%%".formatted(disk.getUsagePercent()))
                             .append(")");
                     }
                 } catch (Exception e) {
@@ -166,7 +166,7 @@ public class SystemMonitor {
                     }
                     logBuilder.append("Players: ").append(networkData.getCurrentPlayers())
                         .append("/").append(networkData.getMaxPlayers())
-                        .append(" (").append(String.format("%.1f%%", networkData.getServerUtilization())).append(")")
+                        .append(" (").append("%.1f%%".formatted(networkData.getServerUtilization())).append(")")
                         .append(", Servers: ").append(networkData.getOnlineServers())
                         .append("/").append(networkData.getTotalServers());
                 } catch (Exception e) {
@@ -186,8 +186,8 @@ public class SystemMonitor {
                     if (logBuilder.length() > timestamp.length() + 3) {
                         logBuilder.append(" | ");
                     }
-                    logBuilder.append("JVM: Heap ").append(String.format("%.1f%%", jvmData.getHeapUtilization()))
-                        .append(", NonHeap: ").append(String.format("%.1f MB", jvmData.getNonHeapUsedMB()))
+                    logBuilder.append("JVM: Heap ").append("%.1f%%".formatted(jvmData.getHeapUtilization()))
+                        .append(", NonHeap: ").append("%.1f MB".formatted(jvmData.getNonHeapUsedMB()))
                         .append(", Threads: ").append(jvmData.getThreadCount())
                         .append(", GC: ").append(jvmData.getTotalGCTime()).append("ms")
                         .append(", Classes: ").append(jvmData.getLoadedClassCount());
@@ -208,13 +208,13 @@ public class SystemMonitor {
                     if (logBuilder.length() > timestamp.length() + 3) {
                         logBuilder.append(" | ");
                     }
-                    logBuilder.append("Connection: Avg Ping ").append(String.format("%.1f", connectionData.getAveragePing())).append("ms")
-                        .append(", Max Ping: ").append(String.format("%.1f", connectionData.getMaxPing())).append("ms")
+                    logBuilder.append("Connection: Avg Ping ").append("%.1f".formatted(connectionData.getAveragePing())).append("ms")
+                        .append(", Max Ping: ").append("%.1f".formatted(connectionData.getMaxPing())).append("ms")
                         .append(", Quality: ").append(connectionData.getConnectionQuality());
                     
                     // Optional: Add packet loss if available
                     if (connectionData.getPacketLoss() >= 0) {
-                        logBuilder.append(", Loss: ").append(String.format("%.2f%%", connectionData.getPacketLoss()));
+                        logBuilder.append(", Loss: ").append("%.2f%%".formatted(connectionData.getPacketLoss()));
                     }
                 } catch (Exception e) {
                     logger.debug("Failed to get connection quality data", e);
@@ -592,9 +592,9 @@ public class SystemMonitor {
     
     private String formatBytes(long bytes) {
         if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.2f KB", bytes / 1024.0);
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.2f MB", bytes / (1024.0 * 1024));
-        return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+        if (bytes < 1024 * 1024) return "%.2f KB".formatted(bytes / 1024.0);
+        if (bytes < 1024 * 1024 * 1024) return "%.2f MB".formatted(bytes / (1024.0 * 1024));
+        return "%.2f GB".formatted(bytes / (1024.0 * 1024 * 1024));
     }
     
     public void shutdown() {
