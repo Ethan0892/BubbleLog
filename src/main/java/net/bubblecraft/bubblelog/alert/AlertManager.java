@@ -83,8 +83,8 @@ public class AlertManager {
             // Check CPU alerts
             try {
                 if (config.isCpuMonitoringEnabled() && cpuUsage * 100 > config.getCpuThreshold()) {
-                    sendAlert(AlertType.CPU_HIGH, 
-                        String.format("CPU usage is %.2f%% (threshold: %.1f%%)", 
+                    sendAlert(AlertType.CPU_HIGH,
+                        "CPU usage is %.2f%% (threshold: %.1f%%)".formatted(
                             cpuUsage * 100, config.getCpuThreshold()));
                 }
             } catch (Exception e) {
@@ -95,7 +95,7 @@ public class AlertManager {
             try {
                 if (config.isRamMonitoringEnabled() && memUsage.getUsagePercent() > config.getRamThreshold()) {
                     sendAlert(AlertType.RAM_HIGH,
-                        String.format("RAM usage is %.2f%% (threshold: %.1f%%) - %s/%s", 
+                        "RAM usage is %.2f%% (threshold: %.1f%%) - %s/%s".formatted(
                             memUsage.getUsagePercent(), config.getRamThreshold(),
                             formatBytes(memUsage.getUsed()), formatBytes(memUsage.getTotal())));
                 }
@@ -110,7 +110,7 @@ public class AlertManager {
                         try {
                             if (disk != null && disk.getUsagePercent() > config.getDiskThreshold()) {
                                 sendAlert(AlertType.DISK_HIGH,
-                                    String.format("Disk %s usage is %.2f%% (threshold: %.1f%%) - %s/%s",
+                                    "Disk %s usage is %.2f%% (threshold: %.1f%%) - %s/%s".formatted(
                                         disk.getName(), disk.getUsagePercent(), config.getDiskThreshold(),
                                         formatBytes(disk.getUsed()), formatBytes(disk.getTotal())));
                             }
@@ -143,7 +143,7 @@ public class AlertManager {
                 
                 if (criticalCount >= 2 || (criticalCount >= 1 && criticalDisks > 0)) {
                     sendAlert(AlertType.SYSTEM_CRITICAL,
-                        String.format("Multiple system resources are under stress! CPU: %.2f%%, RAM: %.2f%%, Disks with issues: %d",
+                        "Multiple system resources are under stress! CPU: %.2f%%, RAM: %.2f%%, Disks with issues: %d".formatted(
                             cpuUsage * 100, memUsage.getUsagePercent(), criticalDisks));
                 }
             } catch (Exception e) {
@@ -168,7 +168,7 @@ public class AlertManager {
         lastAlertTimes.put(alertType, currentTime);
         
         String timestamp = LocalDateTime.now().format(dateFormatter);
-        String fullMessage = String.format("[%s] ALERT - %s: %s", 
+        String fullMessage = "[%s] ALERT - %s: %s".formatted(
             timestamp, alertType.getDisplayName(), message);
         
         // Log to console
@@ -221,7 +221,7 @@ public class AlertManager {
                 String timestamp = Instant.now().toString();
                 
                 // Create a rich embed with server information
-                String jsonPayload = String.format("""
+                String jsonPayload = """
                     {
                         "content": null,
                         "embeds": [{
@@ -260,10 +260,10 @@ public class AlertManager {
                             }
                         }],
                         "attachments": []
-                    }""", 
-                    emoji, alertType.getDisplayName(), 
-                    escapeJson(message), 
-                    color, 
+                    }""".formatted(
+                    emoji, alertType.getDisplayName(),
+                    escapeJson(message),
+                    color,
                     timestamp,
                     alertType.getDisplayName(),
                     getSeverityLevel(alertType),
@@ -304,7 +304,7 @@ public class AlertManager {
             try {
                 String emoji = getAlertEmoji(alertType);
                 
-                String jsonPayload = String.format("""
+                String jsonPayload = """
                     {
                         "text": "%s *%s*",
                         "attachments": [{
@@ -317,7 +317,7 @@ public class AlertManager {
                             "footer": "BubbleLog System Monitor",
                             "ts": %d
                         }]
-                    }""", emoji, alertType.getDisplayName(), 
+                    }""".formatted(emoji, alertType.getDisplayName(),
                     getSlackColor(alertType), message, System.currentTimeMillis() / 1000);
                 
                 HttpRequest request = HttpRequest.newBuilder()
@@ -375,9 +375,9 @@ public class AlertManager {
     
     private String formatBytes(long bytes) {
         if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.2f KB", bytes / 1024.0);
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.2f MB", bytes / (1024.0 * 1024));
-        return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+        if (bytes < 1024 * 1024) return "%.2f KB".formatted(bytes / 1024.0);
+        if (bytes < 1024 * 1024 * 1024) return "%.2f MB".formatted(bytes / (1024.0 * 1024));
+        return "%.2f GB".formatted(bytes / (1024.0 * 1024 * 1024));
     }
     
     public void shutdown() {
@@ -408,14 +408,14 @@ public class AlertManager {
                 StringBuilder diskSummary = new StringBuilder();
                 for (SystemMonitor.DiskUsage disk : diskUsages) {
                     if (diskSummary.length() > 0) diskSummary.append("\\n");
-                    diskSummary.append(String.format("**%s**: %.1f%% (%.1f GB free)", 
+                    diskSummary.append("**%s**: %.1f%% (%.1f GB free)".formatted(
                         disk.getName(), disk.getUsagePercent(), disk.getFree() / (1024.0 * 1024 * 1024)));
                 }
                 if (diskSummary.length() == 0) {
                     diskSummary.append("No disk data available");
                 }
                 
-                String jsonPayload = String.format("""
+                String jsonPayload = """
                     {
                         "content": null,
                         "embeds": [{
@@ -458,7 +458,7 @@ public class AlertManager {
                                 "icon_url": "https://i.imgur.com/rNNH9lq.png"
                             }
                         }]
-                    }""", 
+                    }""".formatted(
                     healthEmoji, healthColor, timestamp,
                     cpuUsage * 100,
                     memUsage.getUsagePercent(),
@@ -546,7 +546,7 @@ public class AlertManager {
                 
                 String timestamp = Instant.now().toString();
                 
-                String jsonPayload = String.format("""
+                String jsonPayload = """
                     {
                         "content": null,
                         "embeds": [{
@@ -585,7 +585,7 @@ public class AlertManager {
                             }
                         }],
                         "attachments": []
-                    }""", 
+                    }""".formatted(
                     timestamp,
                     escapeJson(senderName)
                 );
@@ -635,13 +635,15 @@ public class AlertManager {
                 lastAlertTimes.put(type, currentTime - config.getAlertCooldown() * 1000L - 1000L);
             }
             
-            String testMessage = String.format(
-                "TEST ALERT - Simulated high resource usage (initiated by %s):\n" +
-                "• CPU Usage: %.1f%% (threshold: %.1f%%)\n" +
-                "• RAM Usage: %.1f%% (threshold: %.1f%%)\n" +
-                "• Used Memory: %s / %s\n" +
-                "• Available Memory: %s\n\n" +
-                "This is a test alert to verify that your alert system is working correctly.",
+            String testMessage = (
+                """
+                TEST ALERT - Simulated high resource usage (initiated by %s):
+                • CPU Usage: %.1f%% (threshold: %.1f%%)
+                • RAM Usage: %.1f%% (threshold: %.1f%%)
+                • Used Memory: %s / %s
+                • Available Memory: %s
+                
+                This is a test alert to verify that your alert system is working correctly.""").formatted(
                 senderName,
                 testCpuUsage * 100, config.getCpuThreshold(),
                 testMemUsage.getUsagePercent(), config.getRamThreshold(),
@@ -666,7 +668,7 @@ public class AlertManager {
             
             // Write to file
             try {
-                writeAlertToFile(String.format("[%s] TEST ALERT: %s", 
+                writeAlertToFile("[%s] TEST ALERT: %s".formatted(
                     LocalDateTime.now().format(dateFormatter), testMessage));
             } catch (IOException e) {
                 logger.warn("Failed to write test alert to file", e);

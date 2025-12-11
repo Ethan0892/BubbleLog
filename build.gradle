@@ -1,15 +1,16 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '8.3.5'
 }
 
 group = 'net.bubblecraft'
-version = '1.0.0'
-description = 'BubbleLog - CPU/RAM monitoring plugin for Velocity'
+version = '2.0.0'
+description = 'BubbleLog - Advanced system monitoring for Velocity with hosting-friendly design'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
@@ -21,11 +22,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
-    annotationProcessor 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    compileOnly 'com.velocitypowered:velocity-api:3.4.0-SNAPSHOT'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.4.0-SNAPSHOT'
     
     // For system monitoring
-    implementation 'com.github.oshi:oshi-core:6.4.8'
+    implementation 'com.github.oshi:oshi-core:6.6.5'
     
     // For configuration
     implementation 'org.spongepowered:configurate-yaml:4.1.2'

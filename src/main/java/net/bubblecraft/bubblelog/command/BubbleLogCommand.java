@@ -40,6 +40,7 @@ public class BubbleLogCommand implements SimpleCommand {
         
         switch (subCommand) {
             case "reload" -> handleReload(source);
+            case "validate" -> handleValidate(source);
             case "test" -> {
                 if (args.length < 2) {
                     source.sendMessage(Component.text("Usage: /bubblelog test <webhook|alert>", NamedTextColor.RED));
@@ -54,6 +55,7 @@ public class BubbleLogCommand implements SimpleCommand {
             }
             case "status" -> handleStatus(source);
             case "info" -> handleInfo(source);
+            case "env", "environment" -> handleEnvironment(source);
             default -> {
                 source.sendMessage(Component.text("Unknown command. Use /bubblelog help for usage.", NamedTextColor.RED));
                 sendHelp(source);
@@ -85,6 +87,106 @@ public class BubbleLogCommand implements SimpleCommand {
         } catch (Exception e) {
             source.sendMessage(Component.text("❌ Failed to reload configuration: " + e.getMessage(), NamedTextColor.RED));
             logger.error("Failed to reload configuration", e);
+        }
+    }
+    
+    private void handleValidate(CommandSource source) {
+        source.sendMessage(Component.text("🔍 Validating BubbleLog configuration...", NamedTextColor.YELLOW));
+        
+        try {
+            ConfigManager configManager = plugin.getConfigManager();
+            if (configManager == null) {
+                source.sendMessage(Component.text("❌ ConfigManager not available", NamedTextColor.RED));
+                return;
+            }
+            
+            ConfigManager.ValidationResult result = configManager.validateConfig();
+            
+            if (result.isValid()) {
+                source.sendMessage(Component.text("✅ Configuration is valid!", NamedTextColor.GREEN));
+            } else {
+                source.sendMessage(Component.text("❌ Configuration validation failed", NamedTextColor.RED));
+            }
+            
+            // Show errors
+            if (result.hasErrors()) {
+                source.sendMessage(Component.text(""));
+                source.sendMessage(Component.text("Errors:", NamedTextColor.RED, TextDecoration.BOLD));
+                for (String error : result.getErrors()) {
+                    source.sendMessage(Component.text("  ❌ " + error, NamedTextColor.RED));
+                }
+            }
+            
+            // Show warnings
+            if (result.hasWarnings()) {
+                source.sendMessage(Component.text(""));
+                source.sendMessage(Component.text("Warnings:", NamedTextColor.YELLOW, TextDecoration.BOLD));
+                for (String warning : result.getWarnings()) {
+                    source.sendMessage(Component.text("  ⚠️ " + warning, NamedTextColor.YELLOW));
+                }
+            }
+            
+            logger.info("Configuration validated by {}: {} errors, {} warnings", 
+                source instanceof Player player ? player.getUsername() : "Console",
+                result.getErrors().size(), result.getWarnings().size());
+            
+        } catch (Exception e) {
+            source.sendMessage(Component.text("❌ Validation failed: " + e.getMessage(), NamedTextColor.RED));
+            logger.error("Configuration validation failed", e);
+        }
+    }
+    
+    private void handleEnvironment(CommandSource source) {
+        try {
+            SystemMonitor systemMonitor = plugin.getSystemMonitor();
+            if (systemMonitor == null) {
+                source.sendMessage(Component.text("❌ System monitor not available", NamedTextColor.RED));
+                return;
+            }
+            
+            net.bubblecraft.bubblelog.monitor.HostingEnvironment env = systemMonitor.getHostingEnvironment();
+            if (env == null) {
+                source.sendMessage(Component.text("❌ Environment info not available", NamedTextColor.RED));
+                return;
+            }
+            
+            source.sendMessage(Component.text("🌐 Hosting Environment", NamedTextColor.GOLD, TextDecoration.BOLD));
+            source.sendMessage(Component.text(""));
+            
+            // Capability level
+            source.sendMessage(Component.text("📊 Capability Level: ", NamedTextColor.AQUA, TextDecoration.BOLD)
+                .append(Component.text(env.getCapabilityLevel().toString(), NamedTextColor.YELLOW)));
+            source.sendMessage(Component.text("  " + env.getCapabilityLevel().getDescription(), NamedTextColor.GRAY));
+            source.sendMessage(Component.text(""));
+            
+            // Capabilities
+            source.sendMessage(Component.text("🔍 Available Features:", NamedTextColor.AQUA, TextDecoration.BOLD));
+            source.sendMessage(createStatusLine("System CPU/RAM Access", env.hasSystemAccess()));
+            source.sendMessage(createStatusLine("Disk Access", env.hasDiskAccess()));
+            source.sendMessage(createStatusLine("Network Access", env.hasNetworkAccess()));
+            source.sendMessage(Component.text(""));
+            
+            // Environment type
+            source.sendMessage(Component.text("📦 Environment Type:", NamedTextColor.AQUA, TextDecoration.BOLD));
+            source.sendMessage(Component.text("  Containerized: " + (env.isContainerized() ? "Yes" : "No"), 
+                env.isContainerized() ? NamedTextColor.GREEN : NamedTextColor.GRAY));
+            source.sendMessage(Component.text("  Shared Hosting: " + (env.isSharedHosting() ? "Likely" : "Unlikely"), 
+                env.isSharedHosting() ? NamedTextColor.YELLOW : NamedTextColor.GRAY));
+            source.sendMessage(Component.text(""));
+            
+            // Recommendations
+            if (env.shouldUseJVMFallback()) {
+                source.sendMessage(Component.text("💡 Recommendations:", NamedTextColor.AQUA, TextDecoration.BOLD));
+                source.sendMessage(Component.text("  • Plugin will use JVM-only monitoring", NamedTextColor.YELLOW));
+                source.sendMessage(Component.text("  • This is normal for shared hosting environments", NamedTextColor.YELLOW));
+                source.sendMessage(Component.text("  • All features will work, but system metrics are limited", NamedTextColor.YELLOW));
+            } else {
+                source.sendMessage(Component.text("✅ Full monitoring capabilities available!", NamedTextColor.GREEN));
+            }
+            
+        } catch (Exception e) {
+            source.sendMessage(Component.text("❌ Failed to get environment info: " + e.getMessage(), NamedTextColor.RED));
+            logger.error("Failed to get environment info", e);
         }
     }
     
@@ -216,9 +318,9 @@ public class BubbleLogCommand implements SimpleCommand {
     private void handleInfo(CommandSource source) {
         source.sendMessage(Component.text("📋 BubbleLog Information", NamedTextColor.GOLD, TextDecoration.BOLD));
         source.sendMessage(Component.text(""));
-        source.sendMessage(Component.text("Version: 1.0.0", NamedTextColor.GREEN));
+        source.sendMessage(Component.text("Version: 2.0.0", NamedTextColor.GREEN));
         source.sendMessage(Component.text("Author: BubbleCraft", NamedTextColor.GREEN));
-        source.sendMessage(Component.text("Description: Advanced system monitoring for Velocity", NamedTextColor.GRAY));
+        source.sendMessage(Component.text("Description: Advanced system monitoring for Velocity with hosting-friendly design", NamedTextColor.GRAY));
         source.sendMessage(Component.text(""));
         source.sendMessage(Component.text("Features:", NamedTextColor.AQUA, TextDecoration.BOLD));
         source.sendMessage(Component.text("  • CPU, RAM, and Disk monitoring", NamedTextColor.GRAY));
@@ -236,12 +338,16 @@ public class BubbleLogCommand implements SimpleCommand {
         source.sendMessage(Component.text(""));
         source.sendMessage(Component.text("/bubblelog reload", NamedTextColor.GREEN)
             .append(Component.text(" - Reload configuration", NamedTextColor.GRAY)));
+        source.sendMessage(Component.text("/bubblelog validate", NamedTextColor.GREEN)
+            .append(Component.text(" - Validate configuration", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("/bubblelog test webhook", NamedTextColor.GREEN)
             .append(Component.text(" - Test Discord webhook", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("/bubblelog test alert", NamedTextColor.GREEN)
             .append(Component.text(" - Send test alert", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("/bubblelog status", NamedTextColor.GREEN)
             .append(Component.text(" - Show monitoring status", NamedTextColor.GRAY)));
+        source.sendMessage(Component.text("/bubblelog env", NamedTextColor.GREEN)
+            .append(Component.text(" - Show environment capabilities", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("/bubblelog info", NamedTextColor.GREEN)
             .append(Component.text(" - Show plugin information", NamedTextColor.GRAY)));
         source.sendMessage(Component.text(""));
@@ -287,12 +393,12 @@ public class BubbleLogCommand implements SimpleCommand {
         String[] args = invocation.arguments();
         
         if (args.length == 0) {
-            return List.of("reload", "test", "status", "info", "help");
+            return List.of("reload", "validate", "test", "status", "env", "info", "help");
         }
         
         if (args.length == 1) {
             String partial = args[0].toLowerCase();
-            return List.of("reload", "test", "status", "info", "help").stream()
+            return List.of("reload", "validate", "test", "status", "env", "info", "help").stream()
                 .filter(cmd -> cmd.startsWith(partial))
                 .toList();
         }
