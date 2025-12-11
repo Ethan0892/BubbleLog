@@ -1,63 +1,141 @@
 # BubbleLog
 
-A modern Velocity plugin that monitors and logs CPU, RAM, and disk usage for your Minecraft server.
+> **Modern, Hosting-Friendly System Monitoring for Velocity**
 
-## Features
+Advanced Velocity monitoring plugin that **automatically adapts to any hosting environment** - from budget shared hosting to dedicated servers.
 
-- **Real-time System Monitoring**: Tracks CPU, RAM, disk, network, and JVM metrics
-- **Network & Player Monitoring**: Player count, server utilization, backend server status
-- **JVM Performance Monitoring**: Heap usage, thread count, garbage collection metrics
-- **Connection Quality Monitoring**: Server response times and availability
-- **Performance Alerts**: Configurable thresholds with multiple notification methods
-- **Discord Integration**: Rich webhook alerts and periodic status reports with embeds
-- **Webhook Integration**: Discord and Slack webhook support for alerts
-- **Smart Alert Management**: Cooldown periods to prevent spam
-- **Critical State Detection**: Alerts when multiple systems are under stress
-- **Robust Error Handling**: Comprehensive error protection ensures server stability
-- **Graceful Degradation**: Continues monitoring even if individual components fail
-- **Ultra-Lightweight Design**: <0.2% CPU impact with smart caching and optimization
-- **Configurable Logging**: Customizable monitoring intervals and log formats
-- **Automatic Log Rotation**: Keeps a configurable number of log files
-- **Easy Configuration**: YAML-based configuration with sensible defaults
+## 🌟 Key Features
 
-## Requirements
+- ✅ **Works on ANY hosting** - Shared, VPS, dedicated, or cloud
+- 🎯 **Auto-detects environment** - No configuration needed
+- 🔄 **Smart fallbacks** - JVM monitoring when system access is limited
+- ⚡ **Async operations** - Zero performance impact
+- 📊 **Comprehensive monitoring** - CPU, RAM, Disk, Network, JVM metrics
+- 🔔 **Discord/Slack alerts** - Real-time notifications
+- 🛠️ **Hot-reload config** - No restart required
 
-- Velocity 3.3.0 or higher
-- Java 17 or higher
+## 📋 Requirements
 
-## Installation
+- **Velocity**: 3.4.0+
+- **Java**: 21+
 
-1. Download the latest `BubbleLog.jar` from the releases
-2. Place it in your Velocity `plugins` folder
-3. Restart your Velocity proxy
-4. Configure the plugin by editing `plugins/bubblelog/config.yml`
+## 🚀 Quick Start
 
-## Configuration
+1. Download `BubbleLog-2.0.0.jar`
+2. Place in `plugins/` folder
+3. Start server - **that's it!**
 
-The plugin creates a `config.yml` file in the `plugins/bubblelog/` directory with the following options:
+### First Commands
+```bash
+/bubblelog env       # Check environment capabilities
+/bubblelog status    # View monitoring status
+/bubblelog reload    # Reload configuration
+```
+
+## ⚙️ Configuration
+
+Default config at `plugins/bubblelog/config.yml`:
 
 ```yaml
 monitoring:
-  # How often to log system usage (in seconds)
-  interval: 30
-  cpu:
-    # Enable CPU usage monitoring
+  interval: 30       # Seconds between checks
+  cpu: { enabled: true }
+  ram: { enabled: true }
+  disk: { enabled: true }
+  network: { enabled: true }
+  jvm: { enabled: true }
+
+alerts:
+  enabled: true
+  thresholds:
+    cpu: 80.0        # Alert at 80% CPU
+    ram: 85.0        # Alert at 85% RAM
+    disk: 90.0       # Alert at 90% disk
+  discord:
+    enabled: false
+    webhook-url: ""
+```
+
+### Shared Hosting Optimization
+```yaml
+monitoring:
+  interval: 60       # Higher interval for shared hosting
+  jvm: { enabled: true }    # Always keep enabled
+```
+
+## 📊 What Gets Monitored
+
+| Metric | Full Access | Shared Hosting |
+|--------|------------|----------------|
+| CPU | System CPU | JVM Process CPU |
+| RAM | System Memory | JVM Heap |
+| Disk | All Disks | Skipped |
+| Network | Player stats | Player stats |
+| JVM | Full metrics | Full metrics |
+
+## 🎮 Commands
+
+| Command | Description |
+|---------|-------------|
+| `/bubblelog env` | Show environment capabilities |
+| `/bubblelog status` | View monitoring status |
+| `/bubblelog reload` | Hot-reload configuration |
+| `/bubblelog validate` | Check config validity |
+| `/bubblelog test webhook` | Test Discord webhook |
+
+**Permission**: `bubblelog.admin`
+
+## 📚 Documentation
+
+- **[HOSTING_GUIDE.md](docs/HOSTING_GUIDE.md)** - Complete guide for shared hosting
+- **[QUICK_START.md](QUICK_START.md)** - 3-step installation
+- **[UPGRADE_TO_2.0.md](UPGRADE_TO_2.0.md)** - Changelog and migration
+
+## 🔧 Troubleshooting
+
+### "Limited system access detected"
+✅ **Normal on shared hosting!** Plugin works with JVM-only monitoring.
+
+### Performance Issues
+Increase monitoring interval:
+```yaml
+monitoring:
+  interval: 120  # Check every 2 minutes
+```
+
+### Discord Webhooks
+1. Create webhook in Discord server settings
+2. Copy webhook URL
+3. Add to config:
+```yaml
+alerts:
+  discord:
     enabled: true
-  ram:
-    # Enable RAM usage monitoring
-    enabled: true
-  disk:
-    # Enable disk usage monitoring
-    enabled: true
-  network:
-    # Enable network and player monitoring
-    enabled: true
-  jvm:
-    # Enable JVM performance monitoring
-    enabled: true
-  connection-quality:
-    # Enable connection quality monitoring (ping, packet loss)
-    enabled: true
+    webhook-url: "https://discord.com/api/webhooks/..."
+```
+
+## 🏗️ Building
+
+```bash
+.\gradlew.bat shadowJar    # Windows
+./gradlew shadowJar        # Linux/Mac
+```
+
+Output: `build/libs/BubbleLog-2.0.0.jar`
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+## 💬 Support
+
+- **GitHub Issues**: For bug reports
+- **Commands**: `/bubblelog env` to check your setup
+
+---
+
+**Made for server administrators running Velocity on any hosting! 🚀**
+
 
 logging:
   # Name of the log file

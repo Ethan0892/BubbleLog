@@ -291,4 +291,118 @@ public class ConfigManager {
     public int getDiscordStatusReportInterval() {
         return discordStatusReportInterval;
     }
+    
+    /**
+     * Reload configuration from file
+     * @return true if reload was successful, false otherwise
+     */
+    public boolean reloadConfig() {
+        try {
+            logger.info("Reloading configuration...");
+            loadConfig();
+            logger.info("Configuration reloaded successfully");
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to reload configuration", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Validate configuration values
+     * @return ValidationResult containing validation status and messages
+     */
+    public ValidationResult validateConfig() {
+        ValidationResult result = new ValidationResult();
+        
+        // Validate monitoring interval
+        if (monitoringInterval < 5) {
+            result.addWarning("Monitoring interval is very low (" + monitoringInterval + "s) - recommended minimum is 5s");
+        } else if (monitoringInterval > 300) {
+            result.addWarning("Monitoring interval is very high (" + monitoringInterval + "s) - data may be too sparse");
+        }
+        
+        // Validate thresholds
+        if (cpuThreshold < 0 || cpuThreshold > 100) {
+            result.addError("CPU threshold must be between 0 and 100 (current: " + cpuThreshold + ")");
+        }
+        if (ramThreshold < 0 || ramThreshold > 100) {
+            result.addError("RAM threshold must be between 0 and 100 (current: " + ramThreshold + ")");
+        }
+        if (diskThreshold < 0 || diskThreshold > 100) {
+            result.addError("Disk threshold must be between 0 and 100 (current: " + diskThreshold + ")");
+        }
+        
+        // Validate webhook URLs if enabled
+        if (enableDiscordWebhook && (discordWebhookUrl == null || discordWebhookUrl.trim().isEmpty())) {
+            result.addError("Discord webhook is enabled but URL is not configured");
+        }
+        if (enableSlackWebhook && (slackWebhookUrl == null || slackWebhookUrl.trim().isEmpty())) {
+            result.addError("Slack webhook is enabled but URL is not configured");
+        }
+        
+        // Validate Discord webhook URL format
+        if (enableDiscordWebhook && discordWebhookUrl != null && !discordWebhookUrl.isEmpty()) {
+            if (!discordWebhookUrl.startsWith("https://discord.com/api/webhooks/") && 
+                !discordWebhookUrl.startsWith("https://discordapp.com/api/webhooks/")) {
+                result.addError("Invalid Discord webhook URL format");
+            }
+        }
+        
+        // Validate alert cooldown
+        if (alertCooldown < 0) {
+            result.addError("Alert cooldown cannot be negative (current: " + alertCooldown + ")");
+        } else if (alertCooldown < 60) {
+            result.addWarning("Alert cooldown is very low (" + alertCooldown + "s) - may spam alerts");
+        }
+        
+        // Validate status report interval
+        if (enableDiscordStatusReports && discordStatusReportInterval < 300) {
+            result.addWarning("Discord status report interval is very low - recommended minimum is 300s (5 minutes)");
+        }
+        
+        // Validate log file settings
+        if (maxLogFiles < 0) {
+            result.addError("Max log files cannot be negative (current: " + maxLogFiles + ")");
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Result of configuration validation
+     */
+    public static class ValidationResult {
+        private final java.util.List<String> errors = new java.util.ArrayList<>();
+        private final java.util.List<String> warnings = new java.util.ArrayList<>();
+        
+        public void addError(String error) {
+            errors.add(error);
+        }
+        
+        public void addWarning(String warning) {
+            warnings.add(warning);
+        }
+        
+        public boolean hasErrors() {
+            return !errors.isEmpty();
+        }
+        
+        public boolean hasWarnings() {
+            return !warnings.isEmpty();
+        }
+        
+        public java.util.List<String> getErrors() {
+            return errors;
+        }
+        
+        public java.util.List<String> getWarnings() {
+            return warnings;
+        }
+        
+        public boolean isValid() {
+            return !hasErrors();
+        }
+    }
 }
+

@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 @Plugin(
     id = "bubblelog",
     name = "BubbleLog",
-    version = "1.0.0",
-    description = "CPU/RAM monitoring plugin for Velocity",
+    version = "2.0.0",
+    description = "Advanced system monitoring for Velocity with hosting-friendly design",
     authors = {"BubbleCraft"}
 )
 public class BubbleLog {
@@ -139,26 +139,40 @@ public class BubbleLog {
         try {
             int interval = configManager.getMonitoringInterval();
             
-            // Validate interval
+            // Validate interval (minimum 5 seconds to avoid performance issues on shared hosting)
             if (interval <= 0) {
                 logger.warn("Invalid monitoring interval: {}, using default of 30 seconds", interval);
                 interval = 30;
+            } else if (interval < 5) {
+                logger.warn("Monitoring interval {} is too low for shared hosting, using minimum of 5 seconds", interval);
+                interval = 5;
             }
             
+            final int finalInterval = interval;
+            
+            // Use async task to avoid blocking the main thread (important for shared hosting)
             monitoringTask = server.getScheduler().buildTask(this, () -> {
                 try {
+                    // Run monitoring in async to prevent blocking proxy
                     if (systemMonitor != null) {
-                        systemMonitor.logSystemUsage();
+                        // Wrap in try-catch to ensure one failure doesn't stop monitoring
+                        server.getScheduler().buildTask(this, () -> {
+                            try {
+                                systemMonitor.logSystemUsage();
+                            } catch (Exception e) {
+                                logger.warn("Error during async system monitoring - monitoring will continue", e);
+                            }
+                        }).schedule();
                     }
                 } catch (Exception e) {
-                    logger.warn("Error during system monitoring - monitoring will continue", e);
+                    logger.warn("Error scheduling monitoring task - monitoring will continue", e);
                     // Don't let individual monitoring errors stop the scheduler
                 }
             })
-                .repeat(interval, TimeUnit.SECONDS)
+                .repeat(finalInterval, TimeUnit.SECONDS)
                 .schedule();
             
-            logger.info("System monitoring started with interval of {} seconds", interval);
+            logger.info("System monitoring started with interval of {} seconds (async mode)", finalInterval);
             
         } catch (Exception e) {
             logger.error("Failed to start monitoring task", e);

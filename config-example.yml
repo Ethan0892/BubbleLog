@@ -1,23 +1,30 @@
 monitoring:
   # How often to log system usage (in seconds)
+  # Minimum recommended: 5 seconds for shared hosting, 30 seconds for optimal performance
+  # Lower values may impact server performance on shared hosting
   interval: 30
   cpu:
     # Enable CPU usage monitoring
+    # Note: On shared hosting, may fall back to JVM CPU usage
     enabled: true
   ram:
     # Enable RAM usage monitoring
+    # Note: On shared hosting, may fall back to JVM heap usage
     enabled: true
   disk:
     # Enable disk usage monitoring
+    # Note: May not be available on all shared hosting environments
     enabled: true
   network:
-    # Enable network and player monitoring
+    # Enable network and player monitoring (lightweight, always available)
     enabled: true
   jvm:
-    # Enable JVM performance monitoring
+    # Enable JVM performance monitoring (lightweight, always available)
+    # Recommended to keep enabled, especially on shared hosting
     enabled: true
   connection-quality:
     # Enable connection quality monitoring (ping, packet loss)
+    # May have slight performance impact, consider disabling on very limited hosts
     enabled: true
 
 logging:

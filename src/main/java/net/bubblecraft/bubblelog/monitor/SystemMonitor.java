@@ -35,11 +35,12 @@ public class SystemMonitor {
     private final Path dataDirectory;
     private final Logger logger;
     private final ConfigManager config;
-    private final SystemInfo systemInfo;
-    private final HardwareAbstractionLayer hardware;
-    private final OperatingSystem os;
+    private SystemInfo systemInfo;
+    private HardwareAbstractionLayer hardware;
+    private OperatingSystem os;
     private final AlertManager alertManager;
     private final ProxyServer server; // For network monitoring
+    private final HostingEnvironment hostingEnv;
     
     private final DateTimeFormatter dateFormatter;
     private long[] prevTicks;
@@ -67,18 +68,42 @@ public class SystemMonitor {
         this.config = config;
         this.alertManager = alertManager;
         this.server = server;
-        this.systemInfo = new SystemInfo();
-        this.hardware = systemInfo.getHardware();
-        this.os = systemInfo.getOperatingSystem();
+        
+        // Detect hosting environment capabilities
+        this.hostingEnv = new HostingEnvironment(logger);
+        
+        // Initialize system monitoring only if we have access
+        if (hostingEnv.hasSystemAccess()) {
+            try {
+                this.systemInfo = new SystemInfo();
+                this.hardware = systemInfo.getHardware();
+                this.os = systemInfo.getOperatingSystem();
+                
+                // Initialize CPU monitoring
+                CentralProcessor processor = hardware.getProcessor();
+                this.prevTicks = processor.getSystemCpuLoadTicks();
+            } catch (Exception e) {
+                logger.warn("Failed to initialize OSHI - falling back to JVM-only monitoring", e);
+                this.systemInfo = null;
+                this.hardware = null;
+                this.os = null;
+            }
+        } else {
+            logger.info("Limited system access detected - using JVM-only monitoring mode");
+            this.systemInfo = null;
+            this.hardware = null;
+            this.os = null;
+        }
+        
         this.dateFormatter = DateTimeFormatter.ofPattern(config.getDateFormat());
         
-        // Initialize CPU monitoring
-        CentralProcessor processor = hardware.getProcessor();
-        this.prevTicks = processor.getSystemCpuLoadTicks();
-        
-        // Initialize JVM monitoring components (lightweight)
+        // Initialize JVM monitoring components (always available)
         this.memoryBean = ManagementFactory.getMemoryMXBean();
         this.threadBean = ManagementFactory.getThreadMXBean();
+    }
+    
+    public HostingEnvironment getHostingEnvironment() {
+        return hostingEnv;
     }
     
     public void logSystemUsage() {
@@ -265,6 +290,11 @@ public class SystemMonitor {
     }
     
     private double getCpuUsage() {
+        // Use JVM fallback if system access is restricted
+        if (!hostingEnv.canMonitorCPU() || hardware == null) {
+            return getJvmCpuUsageFallback();
+        }
+        
         try {
             CentralProcessor processor = hardware.getProcessor();
             long[] currentTicks = processor.getSystemCpuLoadTicks();
@@ -279,12 +309,35 @@ public class SystemMonitor {
             
             return Math.min(cpuUsage, 1.0); // Cap at 100%
         } catch (Exception e) {
-            logger.debug("Error getting CPU usage", e);
-            return 0.0; // Return safe default
+            logger.debug("Error getting CPU usage, trying JVM fallback", e);
+            return getJvmCpuUsageFallback();
+        }
+    }
+    
+    // Fallback CPU monitoring using JVM ProcessCPU (available on most platforms)
+    private double getJvmCpuUsageFallback() {
+        try {
+            com.sun.management.OperatingSystemMXBean osBean = 
+                (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            double cpuUsage = osBean.getProcessCpuLoad();
+            
+            if (Double.isNaN(cpuUsage) || cpuUsage < 0) {
+                return 0.0;
+            }
+            
+            return Math.min(cpuUsage, 1.0);
+        } catch (Exception e) {
+            logger.debug("JVM CPU fallback not available", e);
+            return 0.0;
         }
     }
     
     private MemoryUsage getMemoryUsage() {
+        // Use JVM fallback if system access is restricted
+        if (!hostingEnv.canMonitorRAM() || hardware == null) {
+            return getJvmMemoryUsageFallback();
+        }
+        
         try {
             GlobalMemory memory = hardware.getMemory();
             long total = memory.getTotal();
@@ -294,7 +347,7 @@ public class SystemMonitor {
             // Validate memory values
             if (total <= 0 || available < 0 || used < 0) {
                 logger.debug("Invalid memory values: total={}, available={}, used={}", total, available, used);
-                return new MemoryUsage(0, 0, 0, 0.0);
+                return getJvmMemoryUsageFallback();
             }
             
             double usagePercent = total > 0 ? (double) used / total * 100 : 0.0;
@@ -306,12 +359,34 @@ public class SystemMonitor {
             
             return new MemoryUsage(total, used, available, Math.min(usagePercent, 100.0));
         } catch (Exception e) {
-            logger.debug("Error getting memory usage", e);
-            return new MemoryUsage(0, 0, 0, 0.0); // Return safe default
+            logger.debug("Error getting memory usage, trying JVM fallback", e);
+            return getJvmMemoryUsageFallback();
+        }
+    }
+    
+    // Fallback memory monitoring using JVM heap (always available)
+    private MemoryUsage getJvmMemoryUsageFallback() {
+        try {
+            java.lang.management.MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+            long total = heapUsage.getMax() > 0 ? heapUsage.getMax() : heapUsage.getCommitted();
+            long used = heapUsage.getUsed();
+            long available = total - used;
+            double usagePercent = total > 0 ? (double) used / total * 100 : 0.0;
+            
+            return new MemoryUsage(total, used, available, Math.min(usagePercent, 100.0));
+        } catch (Exception e) {
+            logger.debug("JVM memory fallback failed", e);
+            return new MemoryUsage(0, 0, 0, 0.0);
         }
     }
     
     private List<DiskUsage> getDiskUsage() {
+        // Skip disk monitoring if not available
+        if (!hostingEnv.canMonitorDisk() || os == null) {
+            logger.debug("Disk monitoring not available in this environment");
+            return java.util.Collections.emptyList();
+        }
+        
         try {
             FileSystem fileSystem = os.getFileSystem();
             return fileSystem.getFileStores().stream()
