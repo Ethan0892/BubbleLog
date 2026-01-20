@@ -314,15 +314,26 @@ public class ConfigManager {
      */
     public ValidationResult validateConfig() {
         ValidationResult result = new ValidationResult();
-        
-        // Validate monitoring interval
+
+        validateMonitoringInterval(result);
+        validateThresholds(result);
+        validateWebhooks(result);
+        validateAlertCooldown(result);
+        validateStatusReports(result);
+        validateLogFileSettings(result);
+
+        return result;
+    }
+
+    private void validateMonitoringInterval(ValidationResult result) {
         if (monitoringInterval < 5) {
             result.addWarning("Monitoring interval is very low (" + monitoringInterval + "s) - recommended minimum is 5s");
         } else if (monitoringInterval > 300) {
             result.addWarning("Monitoring interval is very high (" + monitoringInterval + "s) - data may be too sparse");
         }
-        
-        // Validate thresholds
+    }
+
+    private void validateThresholds(ValidationResult result) {
         if (cpuThreshold < 0 || cpuThreshold > 100) {
             result.addError("CPU threshold must be between 0 and 100 (current: " + cpuThreshold + ")");
         }
@@ -332,41 +343,52 @@ public class ConfigManager {
         if (diskThreshold < 0 || diskThreshold > 100) {
             result.addError("Disk threshold must be between 0 and 100 (current: " + diskThreshold + ")");
         }
-        
-        // Validate webhook URLs if enabled
-        if (enableDiscordWebhook && (discordWebhookUrl == null || discordWebhookUrl.trim().isEmpty())) {
-            result.addError("Discord webhook is enabled but URL is not configured");
+    }
+
+    private void validateWebhooks(ValidationResult result) {
+        validateWebhookRequiredUrl(result, enableDiscordWebhook, discordWebhookUrl, "Discord");
+        validateWebhookRequiredUrl(result, enableSlackWebhook, slackWebhookUrl, "Slack");
+        validateDiscordWebhookUrlFormat(result);
+    }
+
+    private void validateWebhookRequiredUrl(ValidationResult result, boolean enabled, String url, String serviceName) {
+        if (enabled && isBlank(url)) {
+            result.addError(serviceName + " webhook is enabled but URL is not configured");
         }
-        if (enableSlackWebhook && (slackWebhookUrl == null || slackWebhookUrl.trim().isEmpty())) {
-            result.addError("Slack webhook is enabled but URL is not configured");
+    }
+
+    private void validateDiscordWebhookUrlFormat(ValidationResult result) {
+        if (!enableDiscordWebhook || isBlank(discordWebhookUrl)) {
+            return;
         }
-        
-        // Validate Discord webhook URL format
-        if (enableDiscordWebhook && discordWebhookUrl != null && !discordWebhookUrl.isEmpty()) {
-            if (!discordWebhookUrl.startsWith("https://discord.com/api/webhooks/") && 
-                !discordWebhookUrl.startsWith("https://discordapp.com/api/webhooks/")) {
-                result.addError("Invalid Discord webhook URL format");
-            }
+        if (!discordWebhookUrl.startsWith("https://discord.com/api/webhooks/") &&
+            !discordWebhookUrl.startsWith("https://discordapp.com/api/webhooks/")) {
+            result.addError("Invalid Discord webhook URL format");
         }
-        
-        // Validate alert cooldown
+    }
+
+    private void validateAlertCooldown(ValidationResult result) {
         if (alertCooldown < 0) {
             result.addError("Alert cooldown cannot be negative (current: " + alertCooldown + ")");
         } else if (alertCooldown < 60) {
             result.addWarning("Alert cooldown is very low (" + alertCooldown + "s) - may spam alerts");
         }
-        
-        // Validate status report interval
+    }
+
+    private void validateStatusReports(ValidationResult result) {
         if (enableDiscordStatusReports && discordStatusReportInterval < 300) {
             result.addWarning("Discord status report interval is very low - recommended minimum is 300s (5 minutes)");
         }
-        
-        // Validate log file settings
+    }
+
+    private void validateLogFileSettings(ValidationResult result) {
         if (maxLogFiles < 0) {
             result.addError("Max log files cannot be negative (current: " + maxLogFiles + ")");
         }
-        
-        return result;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
     
     /**

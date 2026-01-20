@@ -177,7 +177,14 @@ Warnings:
 
 ## 📝 Changelog
 
-### Added
+### 2.0.1 (2026-01-20)
+
+#### Fixed
+- Refactored config validation to reduce method complexity (no behavior change)
+
+### 2.0.0
+
+#### Added
 - HostingEnvironment detection system
 - Environment capabilities command (`/bubblelog env`)
 - Config validation command (`/bubblelog validate`)
@@ -187,7 +194,7 @@ Warnings:
 - Smart interval clamping (min 5s)
 - Resource caching (5-10s windows)
 
-### Changed
+#### Changed
 - Velocity API: 3.3.0 → 3.4.0-SNAPSHOT
 - OSHI library: 6.4.8 → 6.6.5
 - Java requirement: 17 → 21
@@ -195,7 +202,7 @@ Warnings:
 - Monitoring now runs async
 - Better error messages
 
-### Fixed
+#### Fixed
 - Performance issues on shared hosting
 - System access errors in containers
 - Monitoring failures in restricted environments
