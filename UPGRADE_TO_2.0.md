@@ -177,6 +177,11 @@ Warnings:
 
 ## 📝 Changelog
 
+### 2.0.2 (2026-01-20)
+
+#### Fixed
+- Cleaned up command status formatting to satisfy style checks (no behavior change)
+
 ### 2.0.1 (2026-01-20)
 
 #### Fixed

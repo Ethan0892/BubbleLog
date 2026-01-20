@@ -318,7 +318,7 @@ public class BubbleLogCommand implements SimpleCommand {
     private void handleInfo(CommandSource source) {
         source.sendMessage(Component.text("📋 BubbleLog Information", NamedTextColor.GOLD, TextDecoration.BOLD));
         source.sendMessage(Component.text(""));
-        source.sendMessage(Component.text("Version: 2.0.0", NamedTextColor.GREEN));
+        source.sendMessage(Component.text("Version: 2.0.2", NamedTextColor.GREEN));
         source.sendMessage(Component.text("Author: BubbleCraft", NamedTextColor.GREEN));
         source.sendMessage(Component.text("Description: Advanced system monitoring for Velocity with hosting-friendly design", NamedTextColor.GRAY));
         source.sendMessage(Component.text(""));
@@ -360,13 +360,37 @@ public class BubbleLogCommand implements SimpleCommand {
         
         List<String> enabled = new ArrayList<>();
         List<String> disabled = new ArrayList<>();
-        
-        if (config.isCpuMonitoringEnabled()) enabled.add("CPU"); else disabled.add("CPU");
-        if (config.isRamMonitoringEnabled()) enabled.add("RAM"); else disabled.add("RAM");
-        if (config.isDiskMonitoringEnabled()) enabled.add("Disk"); else disabled.add("Disk");
-        if (config.isNetworkMonitoringEnabled()) enabled.add("Network"); else disabled.add("Network");
-        if (config.isJvmMonitoringEnabled()) enabled.add("JVM"); else disabled.add("JVM");
-        if (config.isConnectionQualityMonitoringEnabled()) enabled.add("Connection Quality"); else disabled.add("Connection Quality");
+
+        if (config.isCpuMonitoringEnabled()) {
+            enabled.add("CPU");
+        } else {
+            disabled.add("CPU");
+        }
+        if (config.isRamMonitoringEnabled()) {
+            enabled.add("RAM");
+        } else {
+            disabled.add("RAM");
+        }
+        if (config.isDiskMonitoringEnabled()) {
+            enabled.add("Disk");
+        } else {
+            disabled.add("Disk");
+        }
+        if (config.isNetworkMonitoringEnabled()) {
+            enabled.add("Network");
+        } else {
+            disabled.add("Network");
+        }
+        if (config.isJvmMonitoringEnabled()) {
+            enabled.add("JVM");
+        } else {
+            disabled.add("JVM");
+        }
+        if (config.isConnectionQualityMonitoringEnabled()) {
+            enabled.add("Connection Quality");
+        } else {
+            disabled.add("Connection Quality");
+        }
         
         if (!enabled.isEmpty()) {
             source.sendMessage(Component.text("  ✅ Enabled: " + String.join(", ", enabled), NamedTextColor.GREEN));

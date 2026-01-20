@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @Plugin(
     id = "bubblelog",
     name = "BubbleLog",
-    version = "2.0.1",
+    version = "2.0.2",
     description = "Advanced system monitoring for Velocity with hosting-friendly design",
     authors = {"BubbleCraft"}
 )
